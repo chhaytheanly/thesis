@@ -7,6 +7,13 @@ During the model development and quantitative benchmarking phase, the full-scale
 \section{Quantitative Benchmarking on Mock-up Environment}
 To evaluate the speed--accuracy trade-off of the proposed architecture, we conducted rigorous benchmarking across two distinct scenarios representing varying levels of industrial complexity: a \textbf{Medium Case} ($\approx$\,85 fasteners) and a \textbf{Hard Case} ($\approx$\,430 fasteners). All models were evaluated under identical conditions to ensure a fair comparison.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/chapter4/physical.png}
+    \caption{Physical mock-up construction sample.}
+    \label{fig:physical_mockup}
+\end{figure}
+
 \subsection{Medium Case Performance ($\approx$\,85 Fasteners)}
 The medium case represents a standard operational load with moderate object density and minimal occlusion. As shown in Table~\ref{tab:benchmark_medium}, the proposed \textbf{YOLOv8-GED} model achieves the highest throughput (100.8\,FPS) and the lowest latency (10.4\,ms) while maintaining perfect counting accuracy (85/85).
 
@@ -71,14 +78,14 @@ The system successfully:
 \subsection{PoC Visual Evidence}
 The following figures capture key moments from the PoC demonstration, illustrating the system's real-time detection, tracking, and counting capabilities in a near-actual environment.
 
-\begin{figure}[htbp]
-    \centering
-    % \fbox{\includegraphics[width=0.9\linewidth]{figures/chapter4/poc_wide.png}}
-    \caption{PoC Demonstration: Real-time detection and tracking of fasteners on the simplified conveyor belt. Bounding boxes and unique Track IDs are rendered in real-time.}
-    \label{fig:poc_wide}
-\end{figure}
+% \begin{figure}[htbp]
+%     \centering
+%     % \fbox{\includegraphics[width=0.9\linewidth]{figures/chapter4/poc_wide.png}}
+%     \caption{PoC Demonstration: Real-time detection and tracking of fasteners on the simplified conveyor belt. Bounding boxes and unique Track IDs are rendered in real-time.}
+%     \label{fig:poc_wide}
+% \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \begin{subfigure}{0.48\textwidth}
         \centering

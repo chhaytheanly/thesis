@@ -45,9 +45,9 @@ The dataset comprises images collected from two primary sources:
 \toprule
 \textbf{Dataset} & \textbf{Publisher / Source} & \textbf{Year} & \textbf{Images} \\
 \midrule
-Bolt Nut Screws \cite{screw-nut-bolt_dataset} & Roboflow Universe & 2026 & 1,300 \\
+Bolt Nut Screws \cite{screw-nut-bolt_dataset} & Roboflow Universe & 2026 & 1,500 \\
 MVTec Screws \cite{screw-nut-washer-oj52o_dataset} & MVTec Software GmbH & 2023 & 400 \\
-Screw and Bolt \cite{screw-and-bolt-nwp0z_dataset} & Roboflow Universe & 2024 & 200 \\
+Screw and Bolt \cite{screw-and-bolt-nwp0z_dataset} & Roboflow Universe & 2024 &  300\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -108,10 +108,38 @@ Figure~\ref{fig:dataset_samples} presents representative samples from the traini
     \label{fig:dataset_samples}
 \end{figure}
 
+\subsection{Dataset Splitting}
+
+The dataset was partitioned into training, validation, and test sets using a stratified sampling approach to ensure representative distributions of object types, densities, and lighting conditions across all subsets. The final split ratios are detailed in Table \ref{tab:datasets}.
+
+\begin{table}[htbp]
+\centering
+\caption{Dataset Distribution for Training, Validation, and Testing}
+\label{tab:datasets}
+% Replaced tabularx with a standard tabular for cleaner numeric alignment
+\begin{tabular}{lcc} 
+\toprule
+\textbf{Dataset Split} & \textbf{Number of Images} & \textbf{Percentage (\%)} \\
+\midrule
+Training   & 1,824 & 82.91 \\
+Validation & 276   & 12.55 \\
+Testing    & 100   & 4.55  \\
+\midrule
+\textbf{Total} & \textbf{2,200} & \textbf{100.00} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This splitting strategy ensures that the model is evaluated on unseen data, providing a reliable measure of its generalization capabilities. Specifically, the 276 validation images comprehensively cover fastener characteristics across various lighting conditions and object densities.
+
+Furthermore, while data augmentation techniques are typically employed to balance class distributions and ensure training diversity, the inherent balance and diversity of the collected dataset obviated the need for such methods in this study.
+
+\textbf{Keynote}: Validation set should be done by observation, we cannot just split the dataset randomly, we need to make sure that the validation set is representative of the training set and the test set. We need to make sure that the validation set is not too small or too large, and that it covers all the fasteners characteristics across different lighting conditions and object densities.
+
 \subsection{Preprocessing and Augmentation}
 Metallic surfaces present unique challenges for computer vision systems, particularly susceptibility to specular highlights and uneven illumination. To address these challenges, the following preprocessing and augmentation strategies were employed:
 
-\subsubsection{Preprocessing}
+\subsubsection{Data Preprocessing}
 \textbf{Histogram Equalization (HE)} was applied as a preprocessing step to enhance local contrast and normalize illumination across the dataset.
 
 \subsubsection{Data Augmentation}
@@ -194,15 +222,13 @@ Mosaic augmentation was disabled for the final 15 epochs (\texttt{close\_mosaic 
 
 \section{Model Development Strategy}
 \label{sec:model_development}
-    \includegraphics[width=1.0\textwidth]{figures/chapter3/e2e-overview.png}
-The model development follows a two-pronged approach: (1) fine-tuning established YOLO variants to understand baseline performance characteristics and identify architectural limitations, and (2) designing a custom lightweight architecture specifically optimized for the fastener detection task and edge deployment constraints.
 
-        \makebox[\linewidth][c]{\fbox{\includegraphics[width=\linewidth,height=3.2cm,keepaspectratio]{figures/chapter3/datasets/high-res.png}}}
-        \makebox[\linewidth][c]{\fbox{\includegraphics[width=\linewidth,height=3.2cm,keepaspectratio]{figures/chapter3/datasets/mvtec-sample.png}}}
-        \makebox[\linewidth][c]{\fbox{\includegraphics[width=\linewidth,height=3.2cm,keepaspectratio]{figures/chapter3/datasets/noise.png}}}
-        \makebox[\linewidth][c]{\fbox{\includegraphics[width=\linewidth,height=3.2cm,keepaspectratio]{figures/chapter3/datasets/diff-position.jpg}}}
-        \makebox[\linewidth][c]{\fbox{\includegraphics[width=\linewidth,height=3.2cm,keepaspectratio]{figures/chapter3/datasets/dense.jpg}}}
-        \makebox[\linewidth][c]{\fbox{\includegraphics[width=\linewidth,height=3.2cm,keepaspectratio]{figures/chapter3/datasets/overlapping.jpg}}}
+\begin{figure}[H]
+    \includegraphics[width=1.0\textwidth]{figures/chapter3/e2e-overview.png}
+    \caption{Full System Flow: From data collection and preprocessing to model development, fine-tuning, and edge deployment on NVIDIA Jetson platforms.}
+\end{figure}
+
+The model development follows a two-pronged approach: (1) fine-tuning established YOLO variants to understand baseline performance characteristics and identify architectural limitations, and (2) designing a custom lightweight architecture specifically optimized for the fastener detection task and edge deployment constraints.
 
 The selection of these models was guided by the following considerations:
 
@@ -243,21 +269,32 @@ Table~\ref{tab:model_characteristics} summarizes the architectural characteristi
 \textbf{Model} & \textbf{Params (M)} & \textbf{FLOPs (G)} & \textbf{mAP@0.5} & \textbf{mAP@0.5:0.95} & \textbf{Imgz} \\ \midrule
 YOLO11s        & 9.4  & 21.7  & 0.98 & 0.81 & $1024 \times 1024$ \\
 YOLO11m        & 16.4 & 64.1  & 0.981 & 0.817 & $640 \times 640$ \\
-YOLOv26m       & 21.7 & 75.0  & 0.98 & 0.81 & $640 \times 640$ \\ \midrule
-\textbf{RT-DETR (Baseline)} & \textbf{32} & \textbf{110} & \textbf{0.985} & \textbf{0.82} & $\mathbf{640 \times 640}$ \\ \bottomrule
+YOLOv26m       & 21.7 & 75.0  & 0.98 & 0.81 & $640 \times 640$ \\
+RT-DETR (Baseline) & 32 & 110 & 0.985 & 0.82 & $\mathbf{640 \times 640}$ \\ \midrule
+\textbf{YOLOv8m-GED} & \textbf{14} & \textbf{55} & \textbf{0.982} & \textbf{0.82} & $\mathbf{640 \times 640}$ \\ \bottomrule
 \end{tabular}
 \end{table}
 
 \subsubsection{Training Dynamics Visualization}
 
-\begin{figure}[htbp]
-    \centering
-    \fbox{\includegraphics[width=0.8\linewidth]{figures/chapter3/training_args.png}}
-    \caption{Training dynamics of fine-tuned models showing convergence behavior of mAP, precision, recall, and loss metrics across training epochs.}
+\begin{figure}[H]
     \label{fig:training_curves}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \fbox{\includegraphics[width=0.8\linewidth]{figures/chapter3/training_args.png}}
+        \caption{Training dynamics of fine-tuned models}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{\textwidth}
+        \centering
+        \fbox{\includegraphics[width=0.8\linewidth]{figures/chapter3/yolov8-ged.png}}
+        \caption{Training dynamics performance of YOLOv8-GED (Custom Model)}
+    \end{subfigure}
 \end{figure}
 
-\begin{figure}[htbp]
+As we can see, The YOLOv8-GED's (Custom Model) training plot significant better convergence than YOLO Families almost in all categories even with mAP@50 and mAP@95.
+
+\begin{figure}[H]
     \centering
     \begin{subfigure}{0.48\textwidth}
         \centering
@@ -374,7 +411,6 @@ A key contribution of this work is the \textit{surgical placement} of custom mod
         }
     ]
 
-    % ---------------- Backbone ----------------
     \node[conv]    (conv0)    at (0,0)      {Conv \\ 64};
     \node[conv]    (conv1)    at (0,-1.5)   {Conv \\ 128};
     \node[c2f]     (c2f2)     at (0,-3)     {C2f$\times$2 \\ 128};
@@ -400,7 +436,6 @@ A key contribution of this work is the \textit{surgical placement} of custom mod
     \node[dim, left=0.3cm of emac2f6] (p4) {P4};
     \node[dim, left=0.3cm of sppf9]   (p5) {P5};
 
-    % ---------------- Neck (FPAN) ----------------
     \node[dysample] (dysample10) at (4,-12)   {DySample \\ $\times$2};
     \node[concat]   (concat11)   at (4,-9)    {+};
     \node[emac2f]   (emac2f12)   at (4,-7.5)  {EMAc2f$\times$3 \\ 512};
@@ -530,7 +565,7 @@ Here, $V_1 M_2$ computes a weighted sum of spatial features in $F_2$ based on th
 \end{equation}
 The final block output is $Y = X_{out} + \text{EMA}(X_{out})$, ensuring stable gradient flow.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \fbox{\includegraphics[width=0.9\linewidth]{figures/chapter3/EMAc2f.png}}
     \caption{Attention maps generated by the EMA module demonstrating focus on fastener features, particularly in occluded and densely packed regions.}
@@ -577,7 +612,7 @@ where $(i_m, j_n)$ are the continuous coordinates derived from $G_{\mathrm{dyn}}
     \label{fig:dysample}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \fbox{\includegraphics[width=0.9\linewidth]{figures/chapter3/ema_dysample.png}}
     \caption{General flow of EMAc2f and DySample}
@@ -642,6 +677,7 @@ Close Mosaic & \texttt{close\_mosaic} & 15 & Epochs before deactivation \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
 \subsubsection{Loss Function Formulation}
 \label{subsubsec:loss_formulation}
 
